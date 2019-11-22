@@ -1,81 +1,73 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
 
-#define NAMELENGTH 20//¶¨Òå½ø³ÌPIDÃû³ÆµÄ×î´ó³¤¶È
-#define RAM 5//¹æ¶¨ÄÚ´æÖÐµÄµÀÊý
-int count = RAM;//ÄÚ´æÖÐµÄµÀÊý
-int TotalTime = 1;//¶¨ÒåËùÓÐ³ÌÐòµÄÔËÐÐÊ±¼ä£¬¹ý³ÌÖÐÓÐ²åÈë¿É¸üÐÂÊ±¼ä£¬³õÊ¼Ê±¼äÎª1
-
-//¶¨ÒåPCB¿é
+//ï¿½ï¿½ï¿½ï¿½PCBï¿½ï¿½
 typedef struct pcb{
-    char PID[NAMELENGTH];//½ø³ÌÃû
-    int runningtime;//ÔËÐÐÊ±¼ä
-    int priority;//ÓÅÏÈÈ¨£¬ÊýÖµÔ½´óÓÅÏÈÈ¨Ô½¸ß
-    int status;//×´Ì¬£¬ÔËÐÐÌ¬1£¬¾ÍÐ÷Ì¬0£¬¹ÒÆðÌ¬-1
-    int property;//½ø³ÌÊôÐÔ£º0Îª¶ÀÁ¢½ø³Ì£¬1·Ç¶ÀÁ¢½ø³Ì
-    int frontstatus;//0±íÊ¾µ±Ç°½ø³ÌÃ»ÓÐÇ°Ç÷½ø³Ì£¬1±íÊ¾µ±Ç°½ø³ÌÓÐÇ°Ç÷½ø³Ì
-    char FrontPID[NAMELENGTH];//Ç°Ç÷½ø³ÌµÄPID
-    int backstatus;//0±íÊ¾µ±Ç°½ø³ÌÃ»ÓÐºó¼Ì½ø³Ì£¬1±íÊ¾µ±Ç°½ø³ÌÓÐºó¼Ì½ø³Ì
-    char BackPID[NAMELENGTH];//ºó¼Ì½ø³ÌµÄPID
+    char PID[NAMELENGTH];//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    int runningtime;//ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
+    int priority;//ï¿½ï¿½ï¿½ï¿½È¨ï¿½ï¿½ï¿½ï¿½ÖµÔ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨Ô½ï¿½ï¿½
+    int status;//×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬-1
+    int property;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½0Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì£ï¿½1ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    int frontstatus;//0ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ì£ï¿½1ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    char FrontPID[NAMELENGTH];//Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½PID
+    int backstatus;//0ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ðºï¿½Ì½ï¿½ï¿½Ì£ï¿½1ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ðºï¿½Ì½ï¿½ï¿½ï¿½
+    char BackPID[NAMELENGTH];//ï¿½ï¿½Ì½ï¿½ï¿½Ìµï¿½PID
 }pcb;
 
 typedef struct Node{
-    pcb PCB_contents;//PCBÄÚÈÝ
-    struct Node* Next;//PCBÖ¸ÏòÏÂÒ»¸öPCBµÄÖ¸Õë
+    pcb PCB_contents;//PCBï¿½ï¿½ï¿½ï¿½
+    struct Node* Next;//PCBÖ¸ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½PCBï¿½ï¿½Ö¸ï¿½ï¿½
 }PCB;
 
-//¶¨Òå¶ÓÁÐ½á¹¹
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð½á¹¹
 typedef struct Queue{
-    PCB *Front;//¶ÓÍ·Ö¸Õë
-    PCB *Rear;//¶ÓÎ²Ö¸Õë
+    PCB *Front;//ï¿½ï¿½Í·Ö¸ï¿½ï¿½
+    PCB *Rear;//ï¿½ï¿½Î²Ö¸ï¿½ï¿½
 }Queue;
 
-//³õÊ¼»¯¶ÓÁÐ
+//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void InitQueue(Queue *q){
     q->Front = q->Rear = (PCB*)malloc(sizeof(PCB));
     if((!q->Front)||(!q->Rear)){
-        printf("´´½¨¶ÓÁÐÊ§°Ü£¡");
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½");
     }
     q->Front->Next = NULL;
 }
 
-//ÊäÈëPCBÐÅÏ¢
+//ï¿½ï¿½ï¿½ï¿½PCBï¿½ï¿½Ï¢
 void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
     int j;
     PCB *p = NULL;
-    printf("ÇëÊäÈë½ø³ÌÊý£º");
+    printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
     int tempsum;
     scanf("%d",&tempsum);
     for(j=0;j<tempsum;j++){
-        //Â¼Èë½ø³ÌµÄÏà¹ØÐÅÏ¢
+        //Â¼ï¿½ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
         p = (PCB*)malloc(sizeof(PCB));
-        printf("ÇëÊäÈëµÚ%d¸ö½ø³ÌµÄÏà¹ØÐÅÏ¢£º\n",j+1);
-        printf("½ø³ÌÃû£º");
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%dï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½\n",j+1);
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
         scanf("%s",p->PCB_contents.PID);
-        printf("½ø³ÌÔËÐÐÊ±¼ä£º");
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£º");
         scanf("%d",&p->PCB_contents.runningtime);
         TotalTime += p->PCB_contents.runningtime;
-        printf("½ø³ÌÓÅÏÈÈ¨£º");
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨ï¿½ï¿½");
         scanf("%d",&p->PCB_contents.priority);
-        printf("½ø³ÌÊÇ·ñÎª¶ÀÁ¢½ø³Ì£¿Îª¶ÀÁ¢½ø³ÌÇëÊäÈë0£¬Îª·Ç¶ÀÁ¢½ø³ÌÇëÊäÈë1£º");
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì£ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½Îªï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½");
         scanf("%d",&p->PCB_contents.property);
         if(p->PCB_contents.property == 1){
-            printf("´Ë½ø³ÌÊÇ·ñÓÐÇ°Ç÷½ø³Ì£¿Ã»ÓÐÇ°Ç÷½ø³ÌÇëÊäÈë0£¬ÓÐÇ°Ç÷½ø³ÌÇëÊäÈë1£º");
+            printf("ï¿½Ë½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ì£ï¿½Ã»ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½");
             scanf("%d",&p->PCB_contents.frontstatus);
             if(p->PCB_contents.frontstatus == 1){
-                printf("ÇëÊäÈëÇ°Ç÷½ø³ÌµÄ½ø³ÌÃû£º");
+                printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ÌµÄ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                 scanf("%s",p->PCB_contents.FrontPID);
             }
-            printf("´Ë½ø³ÌÊÇ·ñÓÐºó¼Ì½ø³Ì£¿Ã»ÓÐºó¼Ì½ø³ÌÇëÊäÈë0£¬ÓÐºó¼Ì½ø³ÌÇëÊäÈë1£º");
+            printf("ï¿½Ë½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ðºï¿½Ì½ï¿½ï¿½Ì£ï¿½Ã»ï¿½Ðºï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½Ðºï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½");
             scanf("%d",&p->PCB_contents.backstatus);
             if(p->PCB_contents.backstatus == 1){
-                printf("ÇëÊäÈëÇ°Ç÷½ø³ÌµÄ½ø³ÌÃû£º");
+                printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ÌµÄ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                 scanf("%s",p->PCB_contents.BackPID);
             }
         }
         p->Next = NULL;
-        //ÅÐ¶ÏÄÚ´æÖÐµÀÊýÊýÁ¿ÊÇ·ñ×ã¹»£¬ÊýÁ¿¹»½«½ø³ÌËÍÈë¾ÍÐ÷¶ÓÁÐÖÐ£¬ÊýÁ¿²»¹»½«½ø³ÌËÍÈëºó±¸¶ÓÁÐÖÐ
+        //ï¿½Ð¶ï¿½ï¿½Ú´ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ã¹»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó±¸¶ï¿½ï¿½ï¿½ï¿½ï¿½
         count--;
         if(count < 0){
             p->PCB_contents.status = -1;
@@ -94,9 +86,9 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
 void SortProcess(Queue *ReadyQueue){
     PCB *Head = ReadyQueue->Front;
     PCB *p, *q = NULL;
-    pcb t;//ÖÐ¼ä±äÁ¿
+    pcb t;//ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½
 
-    //½«¾ÍÐ÷¶ÓÁÐÖÐµÄ½ø³Ì°´ÕÕÓÅÏÈ¼¶½øÐÐÅÅÐò
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ½ï¿½ï¿½Ì°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     for(q = Head->Next;q->Next != NULL;q = q->Next){
         for(p = Head->Next;p->Next != NULL;p = p->Next){
             if(p->PCB_contents.priority < p->Next->PCB_contents.priority){
@@ -107,15 +99,15 @@ void SortProcess(Queue *ReadyQueue){
         }
     }
 };
-//´òÓ¡¾ÍÐ÷¶ÓÁÐÖÐµÄ½ø³Ì
+//ï¿½ï¿½Ó¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ½ï¿½ï¿½ï¿½
 void PrintReadyQueue(Queue *ReadyQueue){
     PCB *p = ReadyQueue->Front;
     if(ReadyQueue->Front == ReadyQueue->Rear){
-        printf("¾ÍÐ÷¶ÓÁÐÖÐÃ»ÓÐ½ø³Ì£¡\n");
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð½ï¿½ï¿½Ì£ï¿½\n");
     }
     else{
         printf("\n");
-        printf("½ø³ÌÃû\t½ø³ÌÔËÐÐÊ±¼ä\t½ø³ÌÓÅÏÈÈ¨\tÇ°Ç÷½ø³Ì½ø³ÌÃû\tºó¼Ì½ø³Ì½ø³ÌÃû\n");
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½\tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨\tÇ°ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½\tï¿½ï¿½Ì½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½\n");
         while(p->Next!=NULL){
             printf("%s\t%d\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority);
             if(p->Next->PCB_contents.frontstatus== 1){
@@ -132,15 +124,15 @@ void PrintReadyQueue(Queue *ReadyQueue){
     }
     printf("\n");
 };
-//´òÓ¡ºó±¸¶ÓÁÐÖÐµÄ½ø³Ì
+//ï¿½ï¿½Ó¡ï¿½ó±¸¶ï¿½ï¿½ï¿½ï¿½ÐµÄ½ï¿½ï¿½ï¿½
 void PrintBackupQueue(Queue *BackupQueue){
     PCB *p = BackupQueue->Front;
     if(BackupQueue->Front == BackupQueue->Rear){
-        printf("ºó±¸¶ÓÁÐÖÐÃ»ÓÐ½ø³Ì£¡\n");
+        printf("ï¿½ó±¸¶ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð½ï¿½ï¿½Ì£ï¿½\n");
     }
     else{
         printf("\n");
-        printf("½ø³ÌÃû\t½ø³ÌÔËÐÐÊ±¼ä\t½ø³ÌÓÅÏÈÈ¨\tÇ°Ç÷½ø³Ì½ø³ÌÃû\tºó¼Ì½ø³Ì½ø³ÌÃû\n");
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½\tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨\tÇ°ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½\tï¿½ï¿½Ì½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½\n");
         while(p->Next!=NULL){
             printf("%s\t%d\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority);
             if(p->Next->PCB_contents.frontstatus== 1){
@@ -159,7 +151,7 @@ void PrintBackupQueue(Queue *BackupQueue){
 };
 
 void RunProcess(Queue *ReadyQueue){
-    //¶ÓÍ·Á½¸ö½ø³Ì³ö¶Ó
+    //ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì³ï¿½ï¿½ï¿½
     PCB *p1 = ReadyQueue->Front->Next;
     ReadyQueue->Front->Next = p1->Next;
     pcb t1;
@@ -170,11 +162,11 @@ void RunProcess(Queue *ReadyQueue){
     t1.status = 1;
     t1.runningtime -= 1;
     t1.priority -= 1;
-    printf("ÕýÔÚÔËÐÐµÄ½ø³Ì£º\n");
-    printf("½ø³ÌÃû\t½ø³ÌÊ£ÓàÔËÐÐÊ±¼ä\t½ø³ÌÓÅÏÈÈ¨\n");
+    printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ½ï¿½ï¿½Ì£ï¿½\n");
+    printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\tï¿½ï¿½ï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½\tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨\n");
     printf("%s\t%d\t%d\n",t1.PID,t1.runningtime,t1.priority);
     printf("---------------------------------------------------------------------------------\n");
-    //Ã»ÓÐÔËÐÐÍêµÄ½ø³ÌÈë¶ÓÎ²
+    //Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î²
     if(t1.runningtime > 0){
         t1.status = 0;
         PCB* p = (PCB*)malloc(sizeof(PCB));
@@ -187,16 +179,16 @@ void RunProcess(Queue *ReadyQueue){
 
 
 int main(void){
-    Queue ReadyQueue;//¶¨Òå¾ÍÐ÷¶ÓÁÐ
-    Queue BackupQueue;//¶¨Òåºó±¸¶ÓÁÐ
+    Queue ReadyQueue;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    Queue BackupQueue;//ï¿½ï¿½ï¿½ï¿½ó±¸¶ï¿½ï¿½ï¿½
     InitQueue(&ReadyQueue);
     InitQueue(&BackupQueue);
-    char c;//¼ÇÂ¼ÓÃ»§²Ù×÷
+    char c;//ï¿½ï¿½Â¼ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½
     int i,j,k;
     for(i=0;i<TotalTime;i++){
-        // //ÈÃÓÃ»§Ñ¡Ôñ¿ÉÒÔ½«¹ÒÆð×´Ì¬µÄ½ø³Ì½â¹Ò
+        // //ï¿½ï¿½ï¿½Ã»ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½Ä½ï¿½ï¿½Ì½ï¿½ï¿½
         // if(BackupQueue.Front != BackupQueue.Rear){
-        //     printf("¼ì²âµ½ÓÐ¹ÒÆð×´Ì¬µÄ½ø³Ì£¬ÊÇ·ñ½â¹Ò£¿ÊäÈë¡°y¡±Ñ¡Ôñ½ø³Ì²¢½â¹Ò£¬ÊäÈë¡°n¡±²»½â¹Ò£º");
+        //     printf("ï¿½ï¿½âµ½ï¿½Ð¹ï¿½ï¿½ï¿½×´Ì¬ï¿½Ä½ï¿½ï¿½Ì£ï¿½ï¿½Ç·ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½ë¡°yï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Ì²ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½ë¡°nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò£ï¿½");
         //     scanf("%c",&c);
         //     if(c == 'y'){
 
@@ -205,24 +197,24 @@ int main(void){
         //         break;
         //     }
         // }
-        //ÈÃÓÃ»§Ôö¼Ó½ø³Ì
-        fflush(stdin);//Çå³ýÉÏÒ»¸ö»Ø³µ·û
-        printf("ÊÇ·ñÒªÐÂÔö¼Ó½ø³Ì£¿ÊäÈë¡°y¡±Ôö¼Ó£¬ÊäÈë¡°n¡±²»Ôö¼Ó£º");
+        //ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½
+        fflush(stdin);//ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ø³ï¿½ï¿½ï¿½
+        printf("ï¿½Ç·ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½Ì£ï¿½ï¿½ï¿½ï¿½ë¡°yï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ë¡°nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½");
         scanf("%c",&c);
             if(c == 'y'){
                 InputPCBInformation(&ReadyQueue,&BackupQueue);
                 //TotalTime;
             }
-        //¶Ô¶ÓÁÐÖÐµÄ½ø³Ì½øÐÐÅÅÐò
+        //ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ÐµÄ½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         SortProcess(&ReadyQueue);
         printf("----------------------------------------------------------------------------");
-        //ÏÔÊ¾Ä¿Ç°¾ÍÐ÷¶ÓÁÐÓëºó±¸¶ÓÁÐ
-        printf("\n¾ÍÐ÷¶ÓÁÐ£º\n");
+        //ï¿½ï¿½Ê¾Ä¿Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó±¸¶ï¿½ï¿½ï¿½
+        printf("\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½\n");
         PrintReadyQueue(&ReadyQueue);
-        printf("\nºó±¸¶ÓÁÐ£º\n");
+        printf("\nï¿½ó±¸¶ï¿½ï¿½Ð£ï¿½\n");
         PrintBackupQueue(&BackupQueue);
 
-        //Ä£ÄâÔËÐÐ½ø³Ì
+        //Ä£ï¿½ï¿½ï¿½ï¿½ï¿½Ð½ï¿½ï¿½ï¿½
         RunProcess(&ReadyQueue);
         
     }
@@ -230,7 +222,7 @@ int main(void){
 }
 
 
-/*²âÊÔÊý¾Ý
+/*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 y
 3
 one
