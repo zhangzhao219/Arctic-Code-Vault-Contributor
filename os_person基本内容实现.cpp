@@ -1,9 +1,5 @@
 
-//����PCB��
-typedef struct pcb{
-    char PID[NAMELENGTH];//������
-    int runningtime;//����ʱ��
-    int priority;//����Ȩ����ֵԽ������ȨԽ��
+�Ȩ����ֵԽ������ȨԽ��
     int status;//״̬������̬1������̬0������̬-1
     int property;//�������ԣ�0Ϊ�������̣�1�Ƕ�������
     int frontstatus;//0��ʾ��ǰ����û��ǰ�����̣�1��ʾ��ǰ������ǰ������
