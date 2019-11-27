@@ -145,8 +145,8 @@ void PrintBackupQueue(Queue *BackupQueue){
 };
 
 void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
-    //CPU A运行程序
-    //若就绪队列为空，直接退出
+    // //CPU A运行程序
+    // //若就绪队列为空，直接退出
     if(ReadyQueue->Front == ReadyQueue->Rear){
         printf("CPU A 中没有进程运行!\n\n");
         return;
@@ -213,7 +213,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\n\n",ta.PID,ta.runningtime,ta.priority,ta.size,ta.status);
     
     //没有运行完的进程入队尾
-    if(ta.runningtime > 0){
+    if((ta.status == 1) && (ta.runningtime > 0)){
         ta.status = 0;
         PCB* p = (PCB*)malloc(sizeof(PCB));
         p->PCB_contents = ta;
@@ -286,7 +286,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
                     //将ta的进程送回后备队列
                     tb.status = 0;
                     PCB* p = (PCB*)malloc(sizeof(PCB));
-                    p->PCB_contents = ta;
+                    p->PCB_contents = tb;
                     p->Next = NULL;
                     BackupQueue->Rear->Next = p;
                     BackupQueue->Rear = p;
@@ -306,7 +306,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     printf("进程名\t进程剩余运行时间\t进程优先权\t进程大小\t进程状态\n");
     printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\n\n",tb.PID,tb.runningtime,tb.priority,tb.size,tb.status);
 
-    if(tb.runningtime > 0){
+    if((tb.status == 1) && (tb.runningtime > 0)){
         tb.status = 0;
         PCB* p = (PCB*)malloc(sizeof(PCB));
         p->PCB_contents = tb;
@@ -330,8 +330,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         ReadyQueue->Rear = p;
         count--;
     }
-};
-
+}
 
 int main(void){
     Queue ReadyQueue;//定义就绪队列
