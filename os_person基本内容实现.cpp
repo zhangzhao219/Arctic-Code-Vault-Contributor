@@ -298,6 +298,17 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
             break;
         }
     }
+    if(strcmp(ta.PID,tb.PID) == 0){
+        printf("CPU B 中没有进程运行!\n\n");
+        PCB* p = (PCB*)malloc(sizeof(PCB));
+        p->PCB_contents = tb;
+        p->PCB_contents.status = 0;
+        p->Next = NULL;
+        ReadyQueue->Rear->Next = p;
+        ReadyQueue->Rear = p;
+        count--;
+        return;
+    }
 
     tb.status = 1;
     tb.runningtime -= 1;
