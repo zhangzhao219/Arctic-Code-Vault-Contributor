@@ -134,7 +134,7 @@ void PrintBackupQueue(Queue *BackupQueue){
         printf("进程名\t进程运行时间\t进程优先权\t进程大小\t进程状态\t前趋进程进程名\n");
         while(p->Next!=NULL){
             printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority,p->Next->PCB_contents.size,p->Next->PCB_contents.status);
-            if(p->Next->PCB_contents.property== 1){
+            if(p->Next->PCB_contents.property != 0){
                 printf("%s\t",p->Next->PCB_contents.FrontPID);
             }
             printf("\n");
@@ -151,13 +151,72 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         printf("CPU A 中没有进程运行!\n\n");
         return;
     }
-    //出队一个程序
-    PCB *pa = ReadyQueue->Front->Next;
-    ReadyQueue->Front= pa;
-    count++;
     pcb ta;
+    //一直出队进程直到找到没有前趋的进程
+    while(1){
+        PCB *pa = ReadyQueue->Front->Next;
+        ReadyQueue->Front= pa;
+        count++;
+        ta = pa->PCB_contents;
+        if((ta.property == 0) || (ta.property == -1)){
+            break;
+        }
+        if(ta.property == 1){
+            int sign = 0;
+            PCB *pt = ReadyQueue->Front;
+            while(pt->Next!=NULL){
+                if(strcmp(ta.FrontPID,pt->Next->PCB_contents.PID) != 0){
+                    pt = pt->Next;
+                }
+                else{
+                    pt->Next->PCB_contents.priority = pt->Next->PCB_contents.priority + ta.priority + ta.runningtime + 1;
+                    sign = 1;//标志在就绪队列中找到了前趋进程
+                    //将ta的进程送回就绪队列
+                    ta.status = 0;
+                    ta.property = -1;//更改一次后假设无前趋
+                    PCB* p = (PCB*)malloc(sizeof(PCB));
+                    p->PCB_contents = ta;
+                    p->Next = NULL;
+                    ReadyQueue->Rear->Next = p;
+                    ReadyQueue->Rear = p;
+                    count--;
+                    break;
+                }   
+            }
+            pt = BackupQueue->Front;
+            while(pt->Next!=NULL){
+                if(strcmp(ta.FrontPID,pt->Next->PCB_contents.PID) != 0){
+                    pt = pt->Next;
+                }
+                else{
+                    sign = 2;//标志在后备队列中找到了前趋进程
+                    //将ta的进程送回后备队列
+                    ta.status = 0;
+                    ta.property = -1;//更改一次后假设无前趋
+                    PCB* p = (PCB*)malloc(sizeof(PCB));
+                    p->PCB_contents = ta;
+                    p->Next = NULL;
+                    BackupQueue->Rear->Next = p;
+                    BackupQueue->Rear = p;
+                    break;
 
-    ta = pa->PCB_contents;
+                    // PCB *ptb = BackupQueue->Front->Next;
+                    // BackupQueue->Front = ptb;
+
+                    // pcb tb;
+                    // tb = pt->PCB_contents;
+                    // p->PCB_contents = tb;
+                    // p->PCB_contents.status = 0;
+                    // p->Next = NULL;
+                    // ReadyQueue->Rear->Next = p;
+                    // ReadyQueue->Rear = p;
+                    // count--;
+                }
+                
+            }
+        }
+    }
+
     ta.status = 1;
     ta.runningtime -= 1;
     ta.priority -= 1;
@@ -167,37 +226,89 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     
 
     
-    //CPU B操作
-    //若就绪队列为空，直接退出
-    if(ReadyQueue->Front == ReadyQueue->Rear){
-        printf("CPU B 中没有进程运行!\n\n");
-    }
-    else{
-        //出队一个程序
-        PCB *pb = ReadyQueue->Front->Next;
-        ReadyQueue->Front= pb;
-        count++;
-        pcb tb;
+    // //CPU B操作
+    // //若就绪队列为空，直接退出
+    // if(ReadyQueue->Front == ReadyQueue->Rear){
+    //     printf("CPU B 中没有进程运行!\n\n");
+    // }
+    // else{
+    //     pcb tb;
+    //     while(1){
+    //         PCB *pb = ReadyQueue->Front->Next;
+    //         ReadyQueue->Front= pb;
+    //         count++;
 
-        tb = pb->PCB_contents;
-        tb.status = 1;
-        tb.runningtime -= 1;
-        tb.priority -= 1;
-        printf("CPU B 中正在运行的进程：\n");
-        printf("进程名\t进程剩余运行时间\t进程优先权\t进程大小\t进程状态\n");
-        printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\n\n",tb.PID,tb.runningtime,tb.priority,tb.size,tb.status);
+    //         tb = pb->PCB_contents;
+    //         if(tb.property == 0){
+                
+    //             tb.status = 1;
+    //             tb.runningtime -= 1;
+    //             tb.priority -= 1;
+    //             break;
+    //         }
+    //         else if(tb.property == 1){
+    //             int sign = 0;
+    //             PCB *pt;
+    //             pt = ReadyQueue->Front;
+    //             while(pt->Next!=NULL){
+    //                 if(strcmp(tb.FrontPID,pt->Next->PCB_contents.FrontPID) == 0){
+    //                     pt->Next->PCB_contents.priority = pt->Next->PCB_contents.priority + tb.priority + 1;
+    //                     sign = 1;//标志在就绪队列中找到了前趋进程
+    //                     //将ta的进程送回就绪队列
+    //                     tb.status = 0;
+    //                     PCB* p = (PCB*)malloc(sizeof(PCB));
+    //                     p->PCB_contents = tb;
+    //                     p->Next = NULL;
+    //                     ReadyQueue->Rear->Next = p;
+    //                     ReadyQueue->Rear = p;
+    //                     count--;
+    //                 }
+    //                 pt = pt->Next;
+    //             }
+    //             pt = BackupQueue->Front;
+    //             while(pt->Next!=NULL){
+    //                 if(strcmp(tb.FrontPID,pt->Next->PCB_contents.FrontPID) == 0){
+    //                     sign = 2;//标志在后备队列中找到了前趋进程
+    //                     //将ta的进程送回后备队列
+    //                     tb.status = 0;
+    //                     PCB* p = (PCB*)malloc(sizeof(PCB));
+    //                     p->PCB_contents = ta;
+    //                     p->Next = NULL;
+    //                     BackupQueue->Rear->Next = p;
+    //                     BackupQueue->Rear = p;
+    //                     count++;
 
-        //没有运行完的进程入队尾
-        if(tb.runningtime > 0){
-            tb.status = 0;
-            PCB* p = (PCB*)malloc(sizeof(PCB));
-            p->PCB_contents = tb;
-            p->Next = NULL;
-            ReadyQueue->Rear->Next = p;
-            ReadyQueue->Rear = p;
-            count--;
-        }
-    }
+
+    //                     // PCB *ptb = BackupQueue->Front->Next;
+    //                     // BackupQueue->Front = ptb;
+
+    //                     // pcb tb;
+    //                     // tb = pt->PCB_contents;
+    //                     // p->PCB_contents = tb;
+    //                     // p->PCB_contents.status = 0;
+    //                     // p->Next = NULL;
+    //                     // ReadyQueue->Rear->Next = p;
+    //                     // ReadyQueue->Rear = p;
+    //                     // count--;
+    //                 }
+    //                 pt = pt->Next;
+    //             }
+    //         }
+    //     }
+    //     printf("CPU B 中正在运行的进程：\n");
+    //     printf("进程名\t进程剩余运行时间\t进程优先权\t进程大小\t进程状态\n");
+    //     printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\n\n",tb.PID,tb.runningtime,tb.priority,tb.size,tb.status);
+
+    //     if(tb.runningtime > 0){
+    //         tb.status = 0;
+    //         PCB* p = (PCB*)malloc(sizeof(PCB));
+    //         p->PCB_contents = tb;
+    //         p->Next = NULL;
+    //         ReadyQueue->Rear->Next = p;
+    //         ReadyQueue->Rear = p;
+    //         count--;
+    //     }
+    // }
 
     //
     //没有运行完的进程入队尾
@@ -212,7 +323,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     }
 
 
-    //如果内存有空闲道数，从后备队列调入程序并运行
+    //如果内存有空闲道数，从后备队列调入就绪队列
     while((count > 0) && (BackupQueue->Front != BackupQueue->Rear)){
         PCB *pt = BackupQueue->Front->Next;
         BackupQueue->Front = pt;
@@ -341,7 +452,7 @@ two
 50
 7
 1
-six
+one
 three
 10
 30
@@ -358,7 +469,8 @@ five
 5
 100
 10
-0
+1
+eight
 six
 7
 20
@@ -375,4 +487,24 @@ eight
 2
 1
 seven
+*/
+/*测试数据4
+y
+3
+one
+5
+20
+8
+1
+two
+two
+8
+10
+6
+0
+three
+4
+5
+5
+0
 */
