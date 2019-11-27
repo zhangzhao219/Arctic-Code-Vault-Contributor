@@ -51,12 +51,14 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
     for(j=0;j<tempsum;j++){
         //录入进程的相关信息
         p = (PCB*)malloc(sizeof(PCB));
-        printf("请输入第%d个进程的相关信息：\n",j+1);
+        printf("\n请输入第%d个进程的相关信息：\n",j+1);
         printf("进程名：");
         scanf("%s",p->PCB_contents.PID);
         printf("进程运行时间：");
         scanf("%d",&p->PCB_contents.runningtime);
         TotalTime += p->PCB_contents.runningtime;
+        printf("进程大小：");
+        scanf("%d",&p->PCB_contents.size);
         printf("进程优先权：");
         scanf("%d",&p->PCB_contents.priority);
         printf("进程是否为独立进程？为独立进程请输入0，为非独立进程请输入1：");
@@ -109,9 +111,9 @@ void PrintReadyQueue(Queue *ReadyQueue){
     }
     else{
         printf("\n");
-        printf("进程名\t进程运行时间\t进程优先权\t前趋进程进程名\n");
+        printf("进程名\t进程运行时间\t进程优先权\t进程大小\t进程状态\t前趋进程进程名\n");
         while(p->Next!=NULL){
-            printf("%s\t%d\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority);
+            printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority,p->Next->PCB_contents.size,p->Next->PCB_contents.status);
             if(p->Next->PCB_contents.property == 1){
                 printf("%s\t",p->Next->PCB_contents.FrontPID);
             }
@@ -129,9 +131,9 @@ void PrintBackupQueue(Queue *BackupQueue){
     }
     else{
         printf("\n");
-        printf("进程名\t进程运行时间\t进程优先权\t前趋进程进程名\t后继进程进程名\n");
+        printf("进程名\t进程运行时间\t进程优先权\t进程大小\t进程状态\t前趋进程进程名\n");
         while(p->Next!=NULL){
-            printf("%s\t%d\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority);
+            printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority,p->Next->PCB_contents.size,p->Next->PCB_contents.status);
             if(p->Next->PCB_contents.property== 1){
                 printf("%s\t",p->Next->PCB_contents.FrontPID);
             }
@@ -146,6 +148,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     //CPU A运行程序
     //若就绪队列为空，直接退出
     if(ReadyQueue->Front == ReadyQueue->Rear){
+        printf("CPU A 中没有进程运行!\n\n");
         return;
     }
     //出队一个程序
@@ -159,9 +162,43 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     ta.runningtime -= 1;
     ta.priority -= 1;
     printf("CPU A 中正在运行的进程：\n");
-    printf("进程名\t进程剩余运行时间\t进程优先权\t进程状态\n");
-    printf("%s\t%d\t%d\t%d\n",ta.PID,ta.runningtime,ta.priority,ta.status);
+    printf("进程名\t进程剩余运行时间\t进程优先权\t进程大小\t进程状态\n");
+    printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\n\n",ta.PID,ta.runningtime,ta.priority,ta.size,ta.status);
     
+
+    
+    //CPU B操作
+    //若就绪队列为空，直接退出
+    if(ReadyQueue->Front == ReadyQueue->Rear){
+        printf("CPU B 中没有进程运行!\n\n");
+    }
+    else{
+        //出队一个程序
+        PCB *pb = ReadyQueue->Front->Next;
+        ReadyQueue->Front= pb;
+        count++;
+        pcb tb;
+
+        tb = pb->PCB_contents;
+        tb.status = 1;
+        tb.runningtime -= 1;
+        tb.priority -= 1;
+        printf("CPU B 中正在运行的进程：\n");
+        printf("进程名\t进程剩余运行时间\t进程优先权\t进程大小\t进程状态\n");
+        printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\n\n",tb.PID,tb.runningtime,tb.priority,tb.size,tb.status);
+
+        //没有运行完的进程入队尾
+        if(tb.runningtime > 0){
+            tb.status = 0;
+            PCB* p = (PCB*)malloc(sizeof(PCB));
+            p->PCB_contents = tb;
+            p->Next = NULL;
+            ReadyQueue->Rear->Next = p;
+            ReadyQueue->Rear = p;
+            count--;
+        }
+    }
+
     //
     //没有运行完的进程入队尾
     if(ta.runningtime > 0){
@@ -175,36 +212,6 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     }
 
 
-    //CPU B操作
-    //若就绪队列为空，直接退出
-    if(ReadyQueue->Front == ReadyQueue->Rear){
-        return;
-    }
-    //出队一个程序
-    PCB *pb = ReadyQueue->Front->Next;
-    ReadyQueue->Front= pb;
-    count++;
-    pcb tb;
-
-    tb = pb->PCB_contents;
-    tb.status = 1;
-    tb.runningtime -= 1;
-    tb.priority -= 1;
-    printf("CPU B 中正在运行的进程：\n");
-    printf("进程名\t进程剩余运行时间\t进程优先权\t进程状态\n");
-    printf("%s\t%d\t%d\t%d\n",tb.PID,tb.runningtime,tb.priority,tb.status);
-
-    //没有运行完的进程入队尾
-    if(tb.runningtime > 0){
-        tb.status = 0;
-        PCB* p = (PCB*)malloc(sizeof(PCB));
-        p->PCB_contents = tb;
-        p->Next = NULL;
-        ReadyQueue->Rear->Next = p;
-        ReadyQueue->Rear = p;
-        count--;
-    }
-
     //如果内存有空闲道数，从后备队列调入程序并运行
     while((count > 0) && (BackupQueue->Front != BackupQueue->Rear)){
         PCB *pt = BackupQueue->Front->Next;
@@ -213,6 +220,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         pcb t;
         t = pt->PCB_contents;
         p->PCB_contents = t;
+        p->PCB_contents.status = 0;
         p->Next = NULL;
         ReadyQueue->Rear->Next = p;
         ReadyQueue->Rear = p;
@@ -228,7 +236,7 @@ int main(void){
     InitQueue(&BackupQueue);
     char c;//记录用户操作
     int i,j,k;
-    for(i=0;i<TotalTime;i=i+2){
+    for(i=0;i<TotalTime;i+=1){
         // //让用户选择可以将挂起状态的进程解挂
         // if(BackupQueue.Front != BackupQueue.Rear){
         //     printf("检测到有挂起状态的进程，是否解挂？输入“y”选择进程并解挂，输入“n”不解挂：");
@@ -242,7 +250,7 @@ int main(void){
         // }
         //让用户增加进程
         fflush(stdin);//清除上一个回车符
-        printf("是否要新增加进程？输入“y”增加，输入“n”不增加：");
+        printf("\n是否要新增加进程？输入“y”增加，输入“n”不增加：");
         scanf("%c",&c);
             if(c == 'y'){
                 InputPCBInformation(&ReadyQueue,&BackupQueue);
@@ -260,7 +268,10 @@ int main(void){
         //模拟运行进程
         RunProcess(&ReadyQueue,&BackupQueue);
         printf("\nTotalTime:%d\ti=%d",TotalTime,i);
-
+        if((ReadyQueue.Front == ReadyQueue.Rear) && (BackupQueue.Front == BackupQueue.Rear)){
+            printf("\n\n所有程序运行结束！！");
+            return 0;
+        }
     }
 
 }
@@ -316,4 +327,52 @@ seven
 8
 10
 0
+*/
+/*测试数据3
+y
+8
+one
+3
+20
+5
+0
+two
+4
+50
+7
+1
+six
+three
+10
+30
+4
+1
+two
+four
+2
+10
+8
+1
+five
+five
+5
+100
+10
+0
+six
+7
+20
+11
+0
+seven
+9
+70
+9
+0
+eight
+1
+120
+2
+1
+seven
 */
