@@ -20,6 +20,8 @@ typedef struct pcb{
     char BackPID[NAMELENGTH];//后继进程的PID
 }pcb;
 
+
+
 typedef struct Node{
     pcb PCB_contents;//PCB内容
     struct Node* Next;//PCB指向下一个PCB的指针
