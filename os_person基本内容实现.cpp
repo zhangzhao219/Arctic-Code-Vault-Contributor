@@ -4,6 +4,21 @@
 
 #define NAMELENGTH 20//定义进程PID名称的最大长度
 #define RAM 5//规定内存中的道数
+#define Table 20
+#define RAMSIZE 500
+
+int area[RAMSIZE];
+
+
+struct table{
+    char PID[NAMELENGTH];
+    int start;
+    int end;
+}table[Table];
+
+int x;//每一个进程分配唯一的地址号
+int y11,y2,sizecount;//辅助定位
+
 int count = RAM;//内存中的道数
 int TotalTime = 1;//定义所有程序的运行时间，过程中有插入可更新时间，初始时间为1
 
@@ -74,13 +89,69 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
             p->PCB_contents.status = -1;
             BackupQueue->Rear->Next = p;
             BackupQueue->Rear = p;
+            strcpy(table[x].PID,p->PCB_contents.PID);
+            sizecount = 1;
+            for(y11=0;y11<RAMSIZE;y11++){
+                sizecount++;
+                if(area[y11] != 0){
+                    sizecount = 1;
+                }
+                if(sizecount == p->PCB_contents.size){
+                    table[x].end = y11 + 1;
+                    table[x].start = y11 - sizecount + 2;
+                    for(y2=table[x].start;y2<=table[x].end;y2++){
+                        area[y2] = x;
+                    }
+                    x++;
+                    break;
+                }
+            }
+            if(y11 == RAMSIZE-1){
+                printf("\n\n主存空间已经用完！！！\n\n");
+                return;
+            }
+
         }
         else{
             p->PCB_contents.status = 0;
             ReadyQueue->Rear->Next = p;
             ReadyQueue->Rear = p;
             count--;
+
+            strcpy(table[x].PID,p->PCB_contents.PID);
+            sizecount = 1;
+            for(y11=0;y11<RAMSIZE;y11++){
+                sizecount++;
+                if(area[y11] != 0){
+                    sizecount = 1;
+                }
+                if(sizecount == p->PCB_contents.size){
+                    table[x].end = y11 + 1;
+                    table[x].start = y11 - sizecount+2 ;
+
+                    for(y2=table[x].start;y2<=table[x].end;y2++){
+                        area[y2] = x;
+                    }
+
+                    x++;
+                    break;
+                }
+            }
+            if(y11 == RAMSIZE-1){
+                printf("\n\n主存空间已经用完！！！\n\n");
+                return;
+            }
+
+
         }
+    }
+    int y3;
+    printf("\n");
+    for(y3=1;y3<=tempsum;y3++){
+        printf("%s %d %d\n",table[y3].PID,table[y3].start,table[y3].end);
+    }
+    for(y3=0;y3<RAMSIZE;y3++){
+        printf("%d ",area[y3]);
     }
 };
 
@@ -348,6 +419,8 @@ int main(void){
     Queue BackupQueue;//定义后备队列
     InitQueue(&ReadyQueue);
     InitQueue(&BackupQueue);
+    memset(area,0,sizeof(area));
+    x = 1;
     char c;//记录用户操作
     int i,j,k;
     for(i=0;i<TotalTime;i+=1){
@@ -510,4 +583,16 @@ three
 5
 5
 0
+*/
+
+/*（1）设计一个抢占式优先权调度算法实现多处理机调度的程序，并且实现在可变分区管理方式下，采用首次适应算法实现主存空间的分配和回收。 
+（2）PCB内容包括：进程名/PID；要求运行时间（单位时间）；优先权；状态；进程属性：独立进程、同步进程（前趋、后继）。 
+（3）可以随机输入若干进程，可随时添加进程，并按优先权排序； 
+（4）从就绪队首选进程运行：优先权-1；要求运行时间-1；要求运行时间为0时，撤销该进程；一个时间片结束后重新排序，进行下轮调度； 
+（5）考虑两个处理机，考虑同步进程的处理机分配问题，每次调度后，显示各进程状态，运行进程要显示在哪个处理机上执行。 
+（6）规定道数，设置后备队列和挂起状态。若内存中进程少于规定道数，可自动从后备队列调度一作业进入。被挂起进程入挂起队列，设置解挂功能用于将制定挂起进程解挂入就绪队列。
+（7）结合实验一PCB增加所需主存大小，主存起始位置；采用首次适应算法分配主存空间。 
+（8）自行假设主存空间大小，预设操作系统所占大小并构造未分分区表。表目内容：起址、长度、状态（未分/空表目）。 
+（9）进程完成后，回收主存，并与相邻空闲分区合并。 
+（10）界面友好；
 */
