@@ -14,10 +14,7 @@ typedef struct pcb{
     int priority;//优先权，数值越大优先权越高
     int status;//状态，运行态1，就绪态0，挂起态-1
     int property;//进程属性：0为独立进程，1非独立进程
-    int frontstatus;//0表示当前进程没有前趋进程，1表示当前进程有前趋进程
     char FrontPID[NAMELENGTH];//前趋进程的PID
-    int backstatus;//0表示当前进程没有后继进程，1表示当前进程有后继进程
-    char BackPID[NAMELENGTH];//后继进程的PID
 }pcb;
 
 
@@ -38,6 +35,7 @@ void InitQueue(Queue *q){
     q->Front = q->Rear = (PCB*)malloc(sizeof(PCB));
     if((!q->Front)||(!q->Rear)){
         printf("创建队列失败！");
+        return;
     }
     q->Front->Next = NULL;
 }
@@ -47,7 +45,7 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
     int j;
     PCB *p = NULL;
     printf("请输入进程数：");
-    int tempsum;
+    int tempsum;//保存进程数
     scanf("%d",&tempsum);
     for(j=0;j<tempsum;j++){
         //录入进程的相关信息
@@ -63,37 +61,30 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
         printf("进程是否为独立进程？为独立进程请输入0，为非独立进程请输入1：");
         scanf("%d",&p->PCB_contents.property);
         if(p->PCB_contents.property == 1){
-            printf("此进程是否有前趋进程？没有前趋进程请输入0，有前趋进程请输入1：");
-            scanf("%d",&p->PCB_contents.frontstatus);
-            if(p->PCB_contents.frontstatus == 1){
                 printf("请输入前趋进程的进程名：");
                 scanf("%s",p->PCB_contents.FrontPID);
-            }
-            printf("此进程是否有后继进程？没有后继进程请输入0，有后继进程请输入1：");
-            scanf("%d",&p->PCB_contents.backstatus);
-            if(p->PCB_contents.backstatus == 1){
-                printf("请输入前趋进程的进程名：");
-                scanf("%s",p->PCB_contents.BackPID);
-            }
         }
         p->Next = NULL;
+    
         //判断内存中道数数量是否足够，数量够将进程送入就绪队列中，数量不够将进程送入后备队列中
-        count--;
-        if(count < 0){
+        if(count <= 0){
             p->PCB_contents.status = -1;
             BackupQueue->Rear->Next = p;
             BackupQueue->Rear = p;
-            count++;
         }
         else{
             p->PCB_contents.status = 0;
             ReadyQueue->Rear->Next = p;
             ReadyQueue->Rear = p;
+            count--;
         }
     }
 };
 
 void SortProcess(Queue *ReadyQueue){
+    if(ReadyQueue->Front == ReadyQueue->Rear){
+        return;
+    }
     PCB *Head = ReadyQueue->Front;
     PCB *p, *q = NULL;
     pcb t;//中间变量
@@ -117,18 +108,13 @@ void PrintReadyQueue(Queue *ReadyQueue){
     }
     else{
         printf("\n");
-        printf("进程名\t进程运行时间\t进程优先权\t前趋进程进程名\t后继进程进程名\n");
+        printf("进程名\t进程运行时间\t进程优先权\t前趋进程进程名\n");
         while(p->Next!=NULL){
             printf("%s\t%d\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority);
-            if(p->Next->PCB_contents.frontstatus== 1){
+            if(p->Next->PCB_contents.property == 1){
                 printf("%s\t",p->Next->PCB_contents.FrontPID);
             }
-            else{
-                printf("\t");
-            }
-            if(p->Next->PCB_contents.backstatus == 1){
-                printf("%s\t",p->Next->PCB_contents.BackPID);
-            }
+            printf("\n");
             p = p->Next;
         }
     }
@@ -145,14 +131,8 @@ void PrintBackupQueue(Queue *BackupQueue){
         printf("进程名\t进程运行时间\t进程优先权\t前趋进程进程名\t后继进程进程名\n");
         while(p->Next!=NULL){
             printf("%s\t%d\t%d\t",p->Next->PCB_contents.PID,p->Next->PCB_contents.runningtime,p->Next->PCB_contents.priority);
-            if(p->Next->PCB_contents.frontstatus== 1){
+            if(p->Next->PCB_contents.property== 1){
                 printf("%s\t",p->Next->PCB_contents.FrontPID);
-            }
-            else{
-                printf("\t");
-            }
-            if(p->Next->PCB_contents.backstatus == 1){
-                printf("%s\t",p->Next->PCB_contents.BackPID);
             }
             p = p->Next;
         }
@@ -162,12 +142,13 @@ void PrintBackupQueue(Queue *BackupQueue){
 
 void RunProcess(Queue *ReadyQueue){
     //队头两个进程出队
-    PCB *p1 = ReadyQueue->Front->Next;
-    ReadyQueue->Front->Next = p1->Next;
-    pcb t1;
     if(ReadyQueue->Front == ReadyQueue->Rear){
         return;
     }
+    PCB *p1 = ReadyQueue->Front->Next;
+    ReadyQueue->Front= p1;
+    pcb t1;
+
     t1 = p1->PCB_contents;
     t1.status = 1;
     t1.runningtime -= 1;
@@ -177,6 +158,7 @@ void RunProcess(Queue *ReadyQueue){
     printf("%s\t%d\t%d\n",t1.PID,t1.runningtime,t1.priority);
     printf("---------------------------------------------------------------------------------\n");
     //没有运行完的进程入队尾
+
     if(t1.runningtime > 0){
         t1.status = 0;
         PCB* p = (PCB*)malloc(sizeof(PCB));
@@ -226,6 +208,7 @@ int main(void){
 
         //模拟运行进程
         RunProcess(&ReadyQueue);
+        printf("\nTotalTime:%d\ti=%d",TotalTime,i);
 
     }
 
