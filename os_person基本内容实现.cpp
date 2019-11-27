@@ -7,7 +7,7 @@
 #define Table 20
 #define RAMSIZE 500
 
-int area[RAMSIZE];
+int area[RAMSIZE+1];
 
 
 struct table{
@@ -17,6 +17,7 @@ struct table{
 }table[Table];
 
 int x;//每一个进程分配唯一的地址号
+int tempsum1;//辅助打印
 int y11,y2,sizecount;//辅助定位
 
 int count = RAM;//内存中的道数
@@ -63,6 +64,7 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
     printf("请输入进程数：");
     int tempsum;//保存进程数
     scanf("%d",&tempsum);
+
     for(j=0;j<tempsum;j++){
         //录入进程的相关信息
         p = (PCB*)malloc(sizeof(PCB));
@@ -86,9 +88,7 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
     
         //判断内存中道数数量是否足够，数量够将进程送入就绪队列中，数量不够将进程送入后备队列中
         if(count <= 0){
-            p->PCB_contents.status = -1;
-            BackupQueue->Rear->Next = p;
-            BackupQueue->Rear = p;
+
             strcpy(table[x].PID,p->PCB_contents.PID);
             sizecount = 1;
             for(y11=0;y11<RAMSIZE;y11++){
@@ -106,17 +106,17 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
                     break;
                 }
             }
-            if(y11 == RAMSIZE-1){
+            if(y11 == RAMSIZE){
                 printf("\n\n主存空间已经用完！！！\n\n");
                 return;
             }
+            p->PCB_contents.status = -1;
+            BackupQueue->Rear->Next = p;
+            BackupQueue->Rear = p;
 
         }
         else{
-            p->PCB_contents.status = 0;
-            ReadyQueue->Rear->Next = p;
-            ReadyQueue->Rear = p;
-            count--;
+
 
             strcpy(table[x].PID,p->PCB_contents.PID);
             sizecount = 1;
@@ -137,21 +137,30 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
                     break;
                 }
             }
-            if(y11 == RAMSIZE-1){
+            if(y11 == RAMSIZE){
                 printf("\n\n主存空间已经用完！！！\n\n");
                 return;
             }
+            p->PCB_contents.status = 0;
+            ReadyQueue->Rear->Next = p;
+            ReadyQueue->Rear = p;
+            count--;
 
 
         }
     }
     int y3;
+    
+    tempsum1 += tempsum;
     printf("\n");
-    for(y3=1;y3<=tempsum;y3++){
+    for(y3=1;y3<=tempsum1;y3++){
         printf("%s %d %d\n",table[y3].PID,table[y3].start,table[y3].end);
     }
-    for(y3=0;y3<RAMSIZE;y3++){
+    for(y3=0;y3<RAMSIZE+1;y3++){
         printf("%d ",area[y3]);
+        if((y3+1)%50 == 0){
+            printf("\n");
+        }
     }
 };
 
@@ -244,7 +253,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
                     pt->Next->PCB_contents.priority = pt->Next->PCB_contents.priority + ta.priority + ta.runningtime + 1;
                     sign = 1;//标志在就绪队列中找到了前趋进程
                     //将ta的进程送回后备队列
-                    ta.status = 0;
+                    ta.status = -1;
                     PCB* p = (PCB*)malloc(sizeof(PCB));
                     p->PCB_contents = ta;
                     p->Next = NULL;
@@ -261,7 +270,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
                 else{
                     sign = 2;//标志在后备队列中找到了前趋进程
                     //将ta的进程送回后备队列
-                    ta.status = 0;
+                    ta.status = -1;
                     PCB* p = (PCB*)malloc(sizeof(PCB));
                     p->PCB_contents = ta;
                     p->Next = NULL;
@@ -301,6 +310,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         PCB* p = (PCB*)malloc(sizeof(PCB));
         pcb t;
         t = pt->PCB_contents;
+        t.status = 0;
         p->PCB_contents = t;
         p->PCB_contents.status = 0;
         p->Next = NULL;
@@ -338,7 +348,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
                     pt->Next->PCB_contents.priority = pt->Next->PCB_contents.priority + tb.priority + tb.runningtime + 1;
                     sign = 1;//标志在就绪队列中找到了前趋进程
                     //将ta的进程送回后备队列
-                    tb.status = 0;
+                    tb.status = -1;
                     PCB* p = (PCB*)malloc(sizeof(PCB));
                     p->PCB_contents = tb;
                     p->Next = NULL;
@@ -355,7 +365,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
                 else{
                     sign = 2;//标志在后备队列中找到了前趋进程
                     //将ta的进程送回后备队列
-                    tb.status = 0;
+                    tb.status = -1;
                     PCB* p = (PCB*)malloc(sizeof(PCB));
                     p->PCB_contents = tb;
                     p->Next = NULL;
@@ -405,6 +415,7 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         PCB* p = (PCB*)malloc(sizeof(PCB));
         pcb t;
         t = pt->PCB_contents;
+        t.status = 0;
         p->PCB_contents = t;
         p->PCB_contents.status = 0;
         p->Next = NULL;
@@ -420,6 +431,7 @@ int main(void){
     InitQueue(&ReadyQueue);
     InitQueue(&BackupQueue);
     memset(area,0,sizeof(area));
+    tempsum1 = 0;
     x = 1;
     char c;//记录用户操作
     int i,j,k;
@@ -465,57 +477,6 @@ int main(void){
 }
 
 
-/*测试数据
-y
-3
-one
-5
-6
-0
-two
-6
-7
-0
-three
-4
-5
-0
-*/ 
-
-/*测试数据2
-y
-7
-one
-5
-6
-1
-sdfdsf
-two
-6
-7
-1
-dsfdsfds
-three
-4
-5
-0
-four
-8
-9
-0
-five
-9
-10
-0
-six
-3
-6
-0
-seven
-8
-10
-0
-*/
 /*测试数据3
 y
 8
