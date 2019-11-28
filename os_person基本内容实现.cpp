@@ -9,7 +9,6 @@
 
 int area[RAMSIZE+1];//内存空间表示矩阵
 
-
 struct table{
     char PID[NAMELENGTH];//进程PID
     int start;//进程起始位置
