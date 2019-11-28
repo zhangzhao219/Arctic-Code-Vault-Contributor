@@ -329,9 +329,11 @@ else{
         PCB* p = (PCB*)malloc(sizeof(PCB));
         pcb t;
         t = pt->PCB_contents;
-        t.status = 0;
+
         p->PCB_contents = t;
-        p->PCB_contents.status = 0;
+        if(p->PCB_contents.status != -2){
+            p->PCB_contents.status = 0;
+        }
         p->Next = NULL;
         ReadyQueue->Rear->Next = p;
         ReadyQueue->Rear = p;
@@ -468,9 +470,11 @@ else{
         PCB* p = (PCB*)malloc(sizeof(PCB));
         pcb t;
         t = pt->PCB_contents;
-        t.status = 0;
+
         p->PCB_contents = t;
-        p->PCB_contents.status = 0;
+        if(p->PCB_contents.status != -2){
+            p->PCB_contents.status = 0;
+        }
         p->Next = NULL;
         ReadyQueue->Rear->Next = p;
         ReadyQueue->Rear = p;
@@ -484,13 +488,13 @@ void stop(Queue *ReadyQueue,Queue *BackupQueue){
         pt = ReadyQueue->Front;
         while(pt->Next != NULL){
             if(pt->Next->PCB_contents.status == -2){
+                fflush(stdin);//清除上一个回车符
                 printf("检测到%s进程被挂起，是否解挂?(解挂输入y,继续挂起输入n)：",pt->Next->PCB_contents.PID);
                 char c;
                 scanf("%c",&c);
                 if(c == 'y'){
                     printf("解挂成功！\n");
                     pt->Next->PCB_contents.status = 0;
-                    break;
                 }
             }
             pt = pt->Next;
@@ -500,13 +504,13 @@ void stop(Queue *ReadyQueue,Queue *BackupQueue){
         pt = BackupQueue->Front;
         while(pt->Next != NULL){
             if(pt->Next->PCB_contents.status == -2){
+                fflush(stdin);//清除上一个回车符
                 printf("检测到%s进程被挂起，是否解挂?(解挂输入y,继续挂起输入n)：",pt->Next->PCB_contents.PID);
                 char c;
                 scanf("%c",&c);
                 if(c == 'y'){
                     printf("解挂成功！\n");
                     pt->Next->PCB_contents.status = -1;
-                    break;
                 }
             }
             pt = pt->Next;
@@ -597,8 +601,22 @@ int main(void){
 
         stop(&ReadyQueue,&BackupQueue);
 
+
+        printf("\n就绪队列：\n");
+        PrintReadyQueue(&ReadyQueue);
+        printf("\n后备队列：\n");
+        PrintBackupQueue(&BackupQueue);
+
         //模拟运行进程
         RunProcess(&ReadyQueue,&BackupQueue);
+
+        printf("\n就绪队列：\n");
+        PrintReadyQueue(&ReadyQueue);
+        printf("\n后备队列：\n");
+        PrintBackupQueue(&BackupQueue);
+
+
+
         printf("\nTotalTime:%d\ti=%d",TotalTime,i);
         printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         if((ReadyQueue.Front == ReadyQueue.Rear) && (BackupQueue.Front == BackupQueue.Rear)){
