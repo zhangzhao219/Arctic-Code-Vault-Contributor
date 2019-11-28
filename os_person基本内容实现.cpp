@@ -3,22 +3,22 @@
 #include<string.h>
 
 #define NAMELENGTH 20//定义进程PID名称的最大长度
-#define RAM 5//规定内存中的道数
-#define Table 20
-#define RAMSIZE 500
+#define RAM 5//规定就绪队列中的道数
+#define Table 20//最多接受的新进程数
+#define RAMSIZE 500//内存中的空间数
 
-int area[RAMSIZE+1];
+int area[RAMSIZE+1];//内存空间表示矩阵
 
 
 struct table{
-    char PID[NAMELENGTH];
-    int start;
-    int end;
-}table[Table];
+    char PID[NAMELENGTH];//进程PID
+    int start;//进程起始位置
+    int end;//进程终止位置
+}table[Table];//分区表
 
-int x;//每一个进程分配唯一的地址号
-int tempsum1;//辅助打印
-int y11,y2,sizecount;//辅助定位
+int x;//每一个进程分配唯一的进程标识符，只加不减
+int tempsum1;//辅助打印分区表
+int y11,y2,sizecount;//辅助定位变量
 
 int count = RAM;//内存中的道数
 int TotalTime = 1;//定义所有程序的运行时间，过程中有插入可更新时间，初始时间为1
@@ -110,13 +110,13 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
                 printf("\n\n主存空间已经用完！！！\n\n");
                 return;
             }
+            
             p->PCB_contents.status = -1;
             BackupQueue->Rear->Next = p;
             BackupQueue->Rear = p;
 
         }
         else{
-
 
             strcpy(table[x].PID,p->PCB_contents.PID);
             sizecount = 1;
@@ -145,23 +145,12 @@ void InputPCBInformation(Queue *ReadyQueue,Queue *BackupQueue){
             ReadyQueue->Rear->Next = p;
             ReadyQueue->Rear = p;
             count--;
-
-
         }
     }
-    int y3;
     
     tempsum1 += tempsum;
     printf("\n");
-    for(y3=1;y3<=tempsum1;y3++){
-        printf("%s %d %d\n",table[y3].PID,table[y3].start,table[y3].end);
-    }
-    for(y3=0;y3<RAMSIZE+1;y3++){
-        printf("%d ",area[y3]);
-        if((y3+1)%50 == 0){
-            printf("\n");
-        }
-    }
+    
 };
 
 void SortProcess(Queue *ReadyQueue){
@@ -285,6 +274,19 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         }
     }
 
+    //内存操作
+    for(y11=1;y11<x;y11++){
+        if(strcmp(ta.PID,table[y11].PID) == 0){
+            printf("%d %d",table[y11].start,table[y11].end);
+            for(y2=table[y11].start;y2<=table[y11].end;y2++){
+                area[y2] = 0;
+            }
+            break;
+        }
+    }
+    table[y11].start = -1;
+
+
     ta.status = 1;
     ta.runningtime -= 1;
     ta.priority -= 1;
@@ -300,6 +302,13 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         p->Next = NULL;
         ReadyQueue->Rear->Next = p;
         ReadyQueue->Rear = p;
+
+        //内存空间操作
+        for(y2=table[y11].end;y2>=table[y11].end - ta.size + 1;y2--){
+            area[y2] = y11;
+        }
+        table[y11].start = table[y11].end - ta.size + 1;
+
         count--;
     }
 
@@ -391,6 +400,19 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         return;
     }
 
+
+    //内存操作
+    for(y11=1;y11<x;y11++){
+        if(strcmp(tb.PID,table[y11].PID) == 0){
+            for(y2=table[y11].start;y2<=table[y11].end;y2++){
+                area[y2] = 0;
+            }
+            break;
+        }
+
+    }
+    table[y11].start = -1;
+
     tb.status = 1;
     tb.runningtime -= 1;
     tb.priority -= 1;
@@ -405,6 +427,15 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
         p->Next = NULL;
         ReadyQueue->Rear->Next = p;
         ReadyQueue->Rear = p;
+
+
+        //内存空间操作
+        for(y2=table[y11].end;y2>=table[y11].end - tb.size + 1;y2--){
+            area[y2] = y11;
+        }
+        table[y11].start = table[y11].end - tb.size + 1;
+
+
         count--;
     }
     
@@ -455,8 +486,19 @@ int main(void){
                 InputPCBInformation(&ReadyQueue,&BackupQueue);
                 //TotalTime;
             }
-        //对队列中的进程进行排序
-        SortProcess(&ReadyQueue);
+
+
+        for(y2=1;y2<=tempsum1;y2++){
+            printf("%s %d %d\n",table[y2].PID,table[y2].start,table[y2].end);
+        }
+        for(y2=0;y2<RAMSIZE+1;y2++){
+            printf("%d ",area[y2]);
+            if((y2+1)%50 == 0){
+                printf("\n");
+            }
+        }
+
+        SortProcess(&ReadyQueue); //对队列中的进程进行排序
         printf("----------------------------------------------------------------------------");
         //显示目前就绪队列与后备队列
         printf("\n就绪队列：\n");
