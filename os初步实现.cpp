@@ -280,7 +280,6 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
                         pt = pt->Next;
                     }//找到后退出
                     else{
-                        pt->Next->PCB_contents.priority = pt->Next->PCB_contents.priority + ta.priority + ta.runningtime + 1;
                         sign = 1;//标志在就绪队列中找到了前趋进程
                         //将ta的进程送回后备队列
                         ta.status = -1;//更改状态
@@ -334,9 +333,12 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     ta.status = 1;
     ta.runningtime -= 1;
     ta.priority -= 1;
-    printf("CPU A 中正在运行的进程：\n");
+    printf("\n\nCPU A 中正在运行的进程：\n");
     printf("进程名\t进程剩余运行时间\t进程优先权\t进程大小\t进程状态\n");
     printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\n\n",ta.PID,ta.runningtime,ta.priority,ta.size,ta.status);
+    if(ta.runningtime == 0){
+        printf("%s运行结束！\n\n",ta.PID);
+    }
     
     //没有运行完的进程入队尾
     if(ta.runningtime > 0){
@@ -415,7 +417,6 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
                         pt = pt->Next;
                     }//找到后退出
                     else{
-                        pt->Next->PCB_contents.priority = pt->Next->PCB_contents.priority + tb.priority + tb.runningtime + 1;
                         sign = 1;//标志在后备队列中找到了前趋进程
                         //将tb的进程送回后备队列
                         tb.status = -1;//更改状态
@@ -486,6 +487,9 @@ void RunProcess(Queue *ReadyQueue,Queue *BackupQueue){
     printf("CPU B 中正在运行的进程：\n");
     printf("进程名\t进程剩余运行时间\t进程优先权\t进程大小\t进程状态\n");
     printf("%s\t\t%d\t\t%d\t\t%d\t\t%d\n\n",tb.PID,tb.runningtime,tb.priority,tb.size,tb.status);
+    if(tb.runningtime == 0){
+        printf("%s运行结束！\n\n",tb.PID);
+    }
 
     //没有运行完的进程入队尾
     if(tb.runningtime > 0){
@@ -573,6 +577,7 @@ void stop(Queue *ReadyQueue,Queue *BackupQueue){
         char stopp[NAMELENGTH];//临时的空字符串
         printf("请输入第%d个想要挂起的进程PID：",i+1);
         scanf("%s",stopp);
+
         //在就绪队列中找想要挂起的进程
         if(ReadyQueue->Front != ReadyQueue->Rear){
             pt = ReadyQueue->Front;
@@ -610,6 +615,8 @@ int main(void){
     int i,j,k;
     for(i=0;i<TotalTime;i+=1){
         fflush(stdin);//清除上一个回车符
+        printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+        printf("第%d次运行——\n",i+1);
 
         printf("\n是否要新增加进程？输入“y”增加，输入“n”不增加：");
         scanf("%c",&c);
@@ -618,25 +625,29 @@ int main(void){
             }
 
         //输出分区表
+        printf("\n分区表：\n");
         for(y2=1;y2<=tempsum1;y2++){
-            printf("%s %d %d\n",table[y2].PID,table[y2].start,table[y2].end);
-        }
-
-        //输出内存空间表示矩阵数组
-        for(y2=0;y2<RAMSIZE+1;y2++){
-            printf("%d ",area[y2]);
-            if((y2+1)%50 == 0){//五十个数输出一行
-                printf("\n");
+            printf("%s ",table[y2].PID);
+            if(table[y2].start == -1){
+                printf("已经结束！\n");
+            }
+            else{
+                printf("%d %d\n",table[y2].start,table[y2].end);
             }
         }
 
-        SortProcess(&ReadyQueue); //对就绪队列中的进程进行排序
+        // //输出内存空间表示矩阵数组
+        // for(y2=0;y2<RAMSIZE+1;y2++){
+        //     printf("%d ",area[y2]);
+        //     if((y2+1)%50 == 0){//五十个数输出一行
+        //         printf("\n");
+        //     }
+        // }
 
-        printf("----------------------------------------------------------------------------");
-        
+        SortProcess(&ReadyQueue); //对就绪队列中的进程进行排序
         
         //显示目前就绪队列与后备队列
-        printf("\n就绪队列：\n");
+        printf("\n\n就绪队列：\n");
         PrintReadyQueue(&ReadyQueue);
         printf("\n后备队列：\n");
         PrintBackupQueue(&BackupQueue);
@@ -654,15 +665,15 @@ int main(void){
         RunProcess(&ReadyQueue,&BackupQueue);
 
 
-        //显示目前就绪队列与后备队列
-        printf("\n就绪队列：\n");
-        PrintReadyQueue(&ReadyQueue);
-        printf("\n后备队列：\n");
-        PrintBackupQueue(&BackupQueue);
+        // //显示目前就绪队列与后备队列
+        // printf("\n就绪队列：\n");
+        // PrintReadyQueue(&ReadyQueue);
+        // printf("\n后备队列：\n");
+        // PrintBackupQueue(&BackupQueue);
 
 
         //辅助显示目前的总体时间以及循环次数（没什么用，可以删了）
-        printf("\nTotalTime:%d\ti=%d",TotalTime,i);
+        // printf("\nTotalTime:%d\ti=%d",TotalTime,i);
         printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
         //如果两个队列均为空，整个运行结束，退出
@@ -677,7 +688,7 @@ int main(void){
 
 /*测试数据3
 y
-8
+6
 one
 3
 20
@@ -690,52 +701,41 @@ two
 1
 one
 three
-10
-30
 4
+30
+8
 0
 four
 2
 10
-8
+6
 1
 five
 five
-5
+4
 100
-10
-1
-eight
+5
+0
 six
-7
+3
 20
-11
+4
 0
-seven
-9
-70
-9
-0
-eight
-1
-120
-2
-1
-seven
+
 */
 /*测试数据4
 y
 3
 one
-5
+3
 20
-8
+4
 1
 two
 two
-8
+2
 10
-6
+3
 0
 three
 4
